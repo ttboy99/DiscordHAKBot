@@ -12,6 +12,7 @@ const client = new Discord.Client();
 
 // Here we load the config.json file that contains our token and our prefix values. 
 const config = require("./config.json");
+let dispatcher;
 // config.token contains the bot's token
 // config.prefix contains the message prefix.
 let welcomeChannel= null;
@@ -130,8 +131,24 @@ client.on("message", async message => {
     message.reply(`${member.user.tag} has been banned by ${message.author.tag} because: ${reason}`);
   }
   
-    
+  if(command === "play"){
+    if (message.member.voice.channel) {
+      const connection = await message.member.voice.channel.join();
+      dispatcher = connection.play('erik.mp3');
+      dispatcher.on('start', () => {
+        console.log('audio.mp3 is now playing!');
+      });
+      dispatcher.on('finish', () => {
+        console.log('audio.mp3 has finished playing!');
+      });
+      dispatcher.on('error', console.error);
+    }
+  }
 
+  if (command === "stop"){
+    if(dispatcher !== null)
+        dispatcher.destroy();
+  }
 	if(command === "spam"){
 		spammessage = args.join(" ");
 		spamFunction = setInterval(function(){ spammer() }, 1000);
