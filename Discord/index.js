@@ -12,27 +12,30 @@ const client = new Discord.Client();
 
 // Here we load the config.json file that contains our token and our prefix values. 
 const config = require("./config.json");
+const path = require('path');
+const fs = require('fs');
+
+var List = require("collections/list");
+var songs = new List();
 let dispatcher;
 // config.token contains the bot's token
 // config.prefix contains the message prefix.
 let welcomeChannel= null;
 let spammessage = "penis";
-let spamFunction = "";
+let spamFunction;
 let guild;
 let olex;
 
 client.on("ready", () => {
-  // This event will run if the bot starts, and logs in, successfully.
   console.log(`Bot has started, with ${client.users.size} users, in ${client.channels.size} channels of ${client.guilds.size} guilds.`); 
-  // Example of changing the bot's playing game to something useful. `client.user` is what the
-  // docs refer to as the "ClientUser".
   client.user.setActivity(`VRPorn`);
   welcomeChannel = client.channels.cache.get('741927071206604821');
   guild = client.guilds.cache.get('663303394362130432');
   olex = guild.member('547755382253158411');
   renamerFunction = setInterval(function(){ renamer() }, 300000);
-});
+  loadSongs();
 
+});
 client.on("guildCreate", guild => {
   // This event triggers when the bot joins a guild.
   console.log(`New guild joined: ${guild.name} (id: ${guild.id}). This guild has ${guild.memberCount} members!`);
@@ -63,7 +66,7 @@ client.on("message", async message => {
   // args = ["Is", "this", "the", "real", "life?"]
   const args = message.content.slice(config.prefix.length).trim().split(/ +/g);
   const command = args.shift().toLowerCase();
-  
+  console.log(args);
   // Let's go with a few common example commands! Feel free to delete or change those.
   
   if(command === "ping") {
@@ -133,8 +136,40 @@ client.on("message", async message => {
   
   if(command === "play"){
     if (message.member.voice.channel) {
+      let currentSong = "songs/erik.mp3";
+      let volume = 1;
+      let bassboost = false;
       const connection = await message.member.voice.channel.join();
-      dispatcher = connection.play('erik.mp3');
+
+      if(args.includes("bassboost"))
+      {
+        bassboost = true;
+        args.splice(args.indexOf("bassboosted"),1);
+      }
+      songs.forEach(function (song){
+        if(args.includes(song)){
+            currentSong = "songs/" + song;
+          args.splice(args.indexOf(song),1);
+          return;
+        }
+
+      });
+      if(args[0] !== null)
+      {
+        if(!isNaN(args[0]))
+        {
+          if(args[0]>100)
+              volume = 1;
+          else
+            volume = ((args[0] > 1) ? args[0] / 100 : args[0]);         
+        }
+        else{
+          
+        }
+      }
+      if(bassboost)
+        volume *= 5000;
+      dispatcher = connection.play(currentSong, {volume: volume});
       dispatcher.on('start', () => {
         console.log('audio.mp3 is now playing!');
       });
@@ -175,6 +210,19 @@ function renamer() {
     }
 }
 
+function loadSongs(){
+  console.log("Loading songs...");
+  fs.readdir(path.join(__dirname, 'songs'), function(err, files){
+    if(err)
+        return console.log(err);
+
+    files.forEach(function(file) {
+      songs.add(file);
+      console.log("Found: " + file);
+    });    
+  });
+  console.log("Done loading songs.");
+}
 
 
 client.login(config.token);
