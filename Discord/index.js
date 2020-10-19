@@ -8,6 +8,7 @@ const fs = require('fs');
 var List = require("collections/list");
 var songs = new List();
 let dispatcher;
+let connection;
 
 let welcomeChannel= null;
 let spammessage = "penis";
@@ -100,7 +101,7 @@ client.on("message", async message => {
       let currentSong = "songs/erik.mp3";
       let volume = 1;
       let bassboost = false;
-      const connection = await message.member.voice.channel.join();
+      connection = await message.member.voice.channel.join();
 
       if(args.includes("bassboost"))
       {
@@ -136,6 +137,7 @@ client.on("message", async message => {
       });
       dispatcher.on('finish', () => {
         console.log(currentSong + ' has finished playing!');
+        connection.channel.leave();
       });
       dispatcher.on('error', console.error);
     }
