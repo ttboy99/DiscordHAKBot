@@ -166,6 +166,9 @@ client.on("message", async (message) => {
     if (dispatcher !== null) dispatcher.destroy();
   }
 
+  if(command === "dc" || command === "disconnect")
+    connection.disconnect();
+
   if (command === "loop") {
     isLooped = !isLooped;
     var msg;
